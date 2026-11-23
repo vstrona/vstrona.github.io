@@ -155,13 +155,41 @@ p, dd { text-wrap: pretty; }
   white-space: nowrap;
 }
 .nav__link {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: var(--s-75) var(--s-200);
   border-radius: var(--r-full);
-  transition: background-color var(--t-color) var(--ease), color var(--t-color) var(--ease);
+  transition: background-color var(--t-color) var(--ease), color 450ms var(--ease);
 }
+.nav__link .ph { font-size: 18px; transition: transform 450ms var(--ease); }
 .nav__link:hover { background: rgba(0, 0, 0, .05); }
-.nav__link.is-current { background: var(--text); color: var(--bg); }
+.nav__link.is-current { color: var(--bg); }
+.nav__link.is-current:hover { background: transparent; }
+.nav__link.is-current .ph { transform: scale(1.08); }
 .nav__name { font-weight: 600; }
+
+/* Чёрная капсула под активной вкладкой. Края едут по отдельности: передний край
+   уходит первым, задний догоняет, и капсула как будто перетекает в соседнюю вкладку.
+   Какой край ждёт, решает script.js через --lag-left и --lag-right. */
+.nav__pill {
+  position: absolute;
+  top: var(--s-50);
+  bottom: var(--s-50);
+  left: var(--pill-left, 0px);
+  right: var(--pill-right, 100%);
+  border-radius: var(--r-full);
+  background: var(--text);
+  opacity: 0;
+  transition:
+    left 520ms var(--ease) var(--lag-left, 0ms),
+    right 520ms var(--ease) var(--lag-right, 0ms),
+    opacity 300ms var(--ease);
+}
+.nav__pill.is-on { opacity: 1; }
+.nav__pill.no-anim { transition: none; }
 
 /* ---------- Первый экран ---------- */
 .hero {
@@ -694,7 +722,8 @@ p, dd { text-wrap: pretty; }
 /* ---------- Телефон ---------- */
 @media (max-width: 639px) {
   .nav { gap: 0; }
-  .nav__link { padding: var(--s-75) var(--s-100); }
+  .nav__link { gap: 5px; padding: var(--s-75) var(--s-100); }
+  .nav__link .ph { font-size: 16px; }
   .nav__name { font-size: 14px; line-height: 20px; }
 
   .hero { padding-top: var(--s-900); padding-bottom: var(--s-600); gap: var(--s-400); }
@@ -743,4 +772,15 @@ p, dd { text-wrap: pretty; }
   .shot { height: 280px; }
   .modal__video.is-vertical { padding: var(--s-200) 0; }
   .modal__video.is-vertical video { height: min(64vh, 520px); }
+}
+
+/* Узкие телефоны: вкладки с иконками должны влезть в одну строку */
+@media (max-width: 400px) {
+  .nav__link { gap: 4px; padding: var(--s-75) 10px; font-size: 13px; }
+  .nav__link .ph { font-size: 15px; }
+  .nav__name { font-size: 13px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav__pill { transition: opacity 200ms linear; }
 }

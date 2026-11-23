@@ -280,20 +280,89 @@
   }
 
   /* ---------- Текущий раздел в навигации ---------- */
+  /* ---------- Меню: чёрная капсула под разделом, который сейчас на экране ---------- */
   function navCurrent() {
-    var links = document.querySelectorAll('[data-nav]');
-    if (!('IntersectionObserver' in window)) return;
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        links.forEach(function (a) {
-          var on = a.dataset.nav === entry.target.id;
-          a.classList.toggle('is-current', on);
-          if (on) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current');
-        });
+    var nav = document.querySelector('.nav');
+    var pill = $('nav-pill');
+    var links = Array.prototype.slice.call(document.querySelectorAll('[data-nav]'));
+    if (!nav || !pill || !links.length) return;
+
+    var current = null;
+    var lockUntil = 0;   // после нажатия на вкладку капсула не скачет по разделам, мимо которых едет прокрутка
+
+    function place(link, animate) {
+      var navBox = nav.getBoundingClientRect();
+      var box = link.getBoundingClientRect();
+      var left = box.left - navBox.left - nav.clientLeft;
+      var right = navBox.right - box.right - nav.clientLeft;
+      var oldLeft = parseFloat(pill.style.getPropertyValue('--pill-left')) || 0;
+      var forward = left > oldLeft;
+
+      // Передний край уходит сразу, задний чуть позже: капсула перетекает, а не прыгает
+      pill.style.setProperty('--lag-left', forward ? '90ms' : '0ms');
+      pill.style.setProperty('--lag-right', forward ? '0ms' : '90ms');
+      pill.classList.toggle('no-anim', !animate);
+      pill.style.setProperty('--pill-left', left + 'px');
+      pill.style.setProperty('--pill-right', right + 'px');
+      pill.classList.add('is-on');
+      if (!animate) { void pill.offsetWidth; pill.classList.remove('no-anim'); }
+    }
+
+    function setCurrent(id, animate) {
+      if (id === current) return;
+      var first = current === null;
+      current = id;
+      links.forEach(function (a) {
+        var on = a.dataset.nav === id;
+        a.classList.toggle('is-current', on);
+        if (on) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current');
+        if (on) place(a, animate && !first);
       });
-    }, { rootMargin: '-45% 0px -50% 0px' });
-    ['top', 'works', 'contacts'].forEach(function (id) { var s = $(id); if (s) io.observe(s); });
+    }
+
+    // Активен последний раздел, чей верх уже поднялся выше середины экрана.
+    // В самом низу страницы активны контакты, даже если они не дотянулись до середины.
+    function detect() {
+      var line = window.innerHeight * 0.45;
+      var id = links[0].dataset.nav;
+      links.forEach(function (a) {
+        var s = $(a.dataset.nav);
+        if (s && s.getBoundingClientRect().top <= line) id = a.dataset.nav;
+      });
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) id = links[links.length - 1].dataset.nav;
+      return id;
+    }
+
+    var ticking = false;
+    function onScroll() {
+      if (ticking || Date.now() < lockUntil) return;
+      ticking = true;
+      requestAnimationFrame(function () { ticking = false; setCurrent(detect(), true); });
+    }
+
+    links.forEach(function (a) {
+      a.addEventListener('click', function () {
+        lockUntil = Date.now() + 1200;
+        setCurrent(a.dataset.nav, true);
+      });
+    });
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('scrollend', function () { lockUntil = 0; onScroll(); });
+
+    // Ширина вкладок меняется, когда догружаются шрифты и иконки или поворачивают экран:
+    // следим за самими вкладками, а не за событиями окна
+    function replace() { links.forEach(function (a) { if (a.dataset.nav === current) place(a, false); }); }
+    if ('ResizeObserver' in window) {
+      var ro = new ResizeObserver(replace);
+      ro.observe(nav);
+      links.forEach(function (a) { ro.observe(a); });
+    } else {
+      window.addEventListener('resize', replace);
+    }
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(replace);
+
+    setCurrent(detect(), false);
   }
 
   document.querySelectorAll('.hero [data-reveal]').forEach(function (n, i) {
