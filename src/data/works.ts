@@ -1,40 +1,51 @@
-/*
-  Список работ. Чтобы добавить работу, допишите объект в массив.
+// Работы портфолио. Чтобы добавить работу, допишите объект в массив и положите файлы
+// в public/assets/works/<id>/: cover.webp, 01.webp…, video.mp4, video-poster.jpg.
+//
+// description: пустая строка = новый абзац, "## " = подзаголовок, "- " = пункт списка.
+// phone: скриншот телефона, который медленно прокручивается в рамке рядом со списком работ.
 
-  id          короткое имя латиницей, совпадает с папкой assets/works/<id>/
-  title       название
-  short       одна строка под карточкой
-  year        год (можно оставить пустым)
-  type        тип проекта
-  stack       на чём сделано
-  description полное описание. Пустая строка = новый абзац,
-              строка с "## " = подзаголовок, строки с "- " = список
-  preview     картинка для карточки (13:9)
-  video       видео о проекте (mp4), poster = кадр-обложка
-  images      скриншоты: img('имя', ширина, высота)
-  url         ссылка на живой сайт; пусто, если сайта нет
-  links       дополнительные ссылки (бот, код)
-*/
-(function () {
-  function media(id) {
-    var base = 'assets/works/' + id + '/';
-    return {
-      preview: base + 'cover.webp',
-      video: base + 'video.mp4',
-      poster: base + 'video-poster.jpg',
-      img: function (name, w, h) { return { src: base + name + '.webp', w: w, h: h }; }
-    };
+export type Shot = { src: string; w: number; h: number }
+
+export type Work = {
+  id: string
+  title: string
+  /** короткое имя для крупного списка работ */
+  name: string
+  short: string
+  year: string | number
+  type: string
+  stack: string[]
+  preview: string
+  video?: string
+  poster?: string
+  phone: Shot
+  images: Shot[]
+  url: string
+  links: { label: string; url: string }[]
+  description: string
+}
+
+function media(id: string) {
+  const base = `assets/works/${id}/`
+  return {
+    preview: base + 'cover.webp',
+    video: base + 'video.mp4',
+    poster: base + 'video-poster.jpg',
+    img: (n: number, w: number, h: number): Shot => ({ src: base + String(n).padStart(2, '0') + '.webp', w, h })
   }
+}
 
-  var lestnica = media('lestnica');
-  var sevmsubot = media('sevmsubot');
-  var sushiko = media('sushiko');
-  var baza = media('baza');
-  var olha = media('olha');
+const lestnica = media('lestnica')
+const sevmsubot = media('sevmsubot')
+const sushiko = media('sushiko')
+const baza = media('baza')
+const olha = media('olha')
 
-  window.WORKS = [
+export const WORKS: Work[] = [
     {
       id: 'lestnica',
+      name: 'Лестница',
+      phone: lestnica.img(6, 390, 844),
       title: 'Лестница',
       short: 'Сайт школы в Севастополе и панель управления в Telegram',
       year: '',
@@ -44,8 +55,8 @@
       video: lestnica.video,
       poster: lestnica.poster,
       images: [
-        lestnica.img('01', 1440, 900), lestnica.img('02', 1221, 1142), lestnica.img('03', 1425, 1065),
-        lestnica.img('04', 1220, 1138), lestnica.img('05', 1440, 640), lestnica.img('06', 390, 844)
+        lestnica.img(1, 1440, 900), lestnica.img(2, 1221, 1142), lestnica.img(3, 1425, 1065),
+        lestnica.img(4, 1220, 1138), lestnica.img(5, 1440, 640), lestnica.img(6, 390, 844)
       ],
       url: 'https://lestnicaco.ru',
       links: [],
@@ -69,6 +80,8 @@
     },
     {
       id: 'sevmsubot',
+      name: 'Расписание МГУ',
+      phone: sevmsubot.img(2, 720, 1558),
       title: 'Расписание МГУ Севастополь',
       short: 'Telegram Mini App с расписанием для студентов',
       year: 2026,
@@ -78,11 +91,11 @@
       video: sevmsubot.video,
       poster: sevmsubot.poster,
       images: [
-        sevmsubot.img('01', 1800, 1013), sevmsubot.img('02', 720, 1558), sevmsubot.img('03', 720, 1558),
-        sevmsubot.img('04', 720, 1558), sevmsubot.img('05', 720, 1558), sevmsubot.img('06', 720, 1558),
-        sevmsubot.img('07', 720, 1558), sevmsubot.img('08', 720, 1558), sevmsubot.img('09', 720, 1558),
-        sevmsubot.img('10', 720, 1558), sevmsubot.img('11', 720, 1558), sevmsubot.img('12', 720, 1558),
-        sevmsubot.img('13', 720, 1558), sevmsubot.img('14', 720, 1558), sevmsubot.img('15', 720, 1558)
+        sevmsubot.img(1, 1800, 1013), sevmsubot.img(2, 720, 1558), sevmsubot.img(3, 720, 1558),
+        sevmsubot.img(4, 720, 1558), sevmsubot.img(5, 720, 1558), sevmsubot.img(6, 720, 1558),
+        sevmsubot.img(7, 720, 1558), sevmsubot.img(8, 720, 1558), sevmsubot.img(9, 720, 1558),
+        sevmsubot.img(10, 720, 1558), sevmsubot.img(11, 720, 1558), sevmsubot.img(12, 720, 1558),
+        sevmsubot.img(13, 720, 1558), sevmsubot.img(14, 720, 1558), sevmsubot.img(15, 720, 1558)
       ],
       url: 'https://sevstud.site',
       links: [
@@ -107,6 +120,8 @@
     },
     {
       id: 'sushiko',
+      name: 'SUSHIKO',
+      phone: sushiko.img(8, 720, 1558),
       title: 'SUSHIKO',
       short: 'Доставка суши и пиццы с админкой в Telegram',
       year: '',
@@ -116,12 +131,12 @@
       video: sushiko.video,
       poster: sushiko.poster,
       images: [
-        sushiko.img('01', 1800, 1013), sushiko.img('02', 1800, 1125), sushiko.img('03', 1800, 1125),
-        sushiko.img('04', 1800, 1125), sushiko.img('05', 1800, 1125), sushiko.img('06', 1493, 1400),
-        sushiko.img('07', 1800, 1125), sushiko.img('08', 720, 1558), sushiko.img('09', 720, 1558),
-        sushiko.img('10', 720, 1558), sushiko.img('11', 720, 1558), sushiko.img('12', 720, 1558),
-        sushiko.img('13', 720, 1558), sushiko.img('14', 720, 1558), sushiko.img('15', 720, 1558),
-        sushiko.img('16', 720, 1558)
+        sushiko.img(1, 1800, 1013), sushiko.img(2, 1800, 1125), sushiko.img(3, 1800, 1125),
+        sushiko.img(4, 1800, 1125), sushiko.img(5, 1800, 1125), sushiko.img(6, 1493, 1400),
+        sushiko.img(7, 1800, 1125), sushiko.img(8, 720, 1558), sushiko.img(9, 720, 1558),
+        sushiko.img(10, 720, 1558), sushiko.img(11, 720, 1558), sushiko.img(12, 720, 1558),
+        sushiko.img(13, 720, 1558), sushiko.img(14, 720, 1558), sushiko.img(15, 720, 1558),
+        sushiko.img(16, 720, 1558)
       ],
       url: '',
       links: [],
@@ -146,6 +161,8 @@
     },
     {
       id: 'baza',
+      name: 'База',
+      phone: baza.img(6, 720, 1558),
       title: 'База',
       short: 'Магазин базовой одежды с каталогом на вешалках',
       year: '',
@@ -155,8 +172,8 @@
       video: baza.video,
       poster: baza.poster,
       images: [
-        baza.img('01', 1800, 1013), baza.img('02', 1800, 1013), baza.img('03', 1800, 1013),
-        baza.img('04', 1800, 1013), baza.img('05', 1800, 1013), baza.img('06', 720, 1558)
+        baza.img(1, 1800, 1013), baza.img(2, 1800, 1013), baza.img(3, 1800, 1013),
+        baza.img(4, 1800, 1013), baza.img(5, 1800, 1013), baza.img(6, 720, 1558)
       ],
       url: '',
       links: [],
@@ -175,6 +192,8 @@
     },
     {
       id: 'olha',
+      name: 'Ольха',
+      phone: olha.img(10, 720, 1558),
       title: 'Ольха',
       short: 'Продающий лендинг мастерской кухонь на заказ',
       year: '',
@@ -184,10 +203,10 @@
       video: olha.video,
       poster: olha.poster,
       images: [
-        olha.img('01', 1440, 900), olha.img('02', 1440, 900), olha.img('03', 1440, 900),
-        olha.img('04', 1440, 900), olha.img('05', 1440, 900), olha.img('06', 1440, 900),
-        olha.img('07', 1440, 900), olha.img('08', 1440, 900), olha.img('09', 1440, 900),
-        olha.img('10', 720, 1558), olha.img('11', 720, 1558), olha.img('12', 720, 1558)
+        olha.img(1, 1440, 900), olha.img(2, 1440, 900), olha.img(3, 1440, 900),
+        olha.img(4, 1440, 900), olha.img(5, 1440, 900), olha.img(6, 1440, 900),
+        olha.img(7, 1440, 900), olha.img(8, 1440, 900), olha.img(9, 1440, 900),
+        olha.img(10, 720, 1558), olha.img(11, 720, 1558), olha.img(12, 720, 1558)
       ],
       url: '',
       links: [],
@@ -216,4 +235,3 @@
       ].join('\n\n')
     }
   ];
-})();

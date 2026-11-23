@@ -1,10 +1,14 @@
-# В репозиторий и на хостинг попадают только файлы сайта
-/*
-!/.gitignore
-!/.nojekyll
-!/index.html
-!/style.css
-!/script.js
-!/viewer.js
-!/works.js
-!/assets/
+node_modules/
+dist/
+.taste-skill/
+legacy/
+# исходники работ и фото лежат только на компьютере
+/SUSHIKO/
+/portfolio.sevmsubot/
+/портфолио.база/
+/портфолио.лестница/
+/Ольха - кухни на заказ/
+/*.png
+docs/
+.claude/
+*.tsbuildinfo
