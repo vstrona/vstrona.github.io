@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react'
 import type { CSSProperties, MouseEvent, PointerEvent as ReactPointerEvent, ReactElement, ReactNode, SVGProps } from 'react'
 import { LazyMotion, animate, domAnimation, m, useInView, useMotionValue, useReducedMotion, useSpring, useTransform } from 'motion/react'
 import type { MotionValue } from 'motion/react'
-import { ArrowUpRight, Bot, Briefcase, ClipboardList, Code2, Database, FileText, Globe, KeyRound, Layers, LayoutDashboard, ListChecks, MessageCircle, MousePointer2, Palette, PenTool, Play, Rocket, Search, Server, ShoppingCart, Smartphone, UserRound, Video } from 'lucide-react'
+import { ArrowDown, ArrowUpRight, Bot, Briefcase, ClipboardList, Code2, Database, FileText, Globe, KeyRound, Layers, LayoutDashboard, ListChecks, MessageCircle, MousePointer2, Palette, PenTool, Play, Rocket, Search, Server, ShoppingCart, Smartphone, UserRound, Video } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -296,6 +296,37 @@ const BLOCK_CSS = `
   }
 }
 
+/* ---------- Phone: the core is pinned in the middle of the screen while scrolling opens it ---------- */
+.n3-core-track {
+  /* The visual spans the screen but never grows taller than the space under the menu. */
+  --n3-core: min(100vw, calc(100svh - 7rem));
+}
+
+@media (max-width: 767.98px) {
+  .n3-core-track {
+    margin-inline: calc(var(--n3-gutter) * -1);
+    height: calc(var(--n3-core) + 110svh);
+  }
+
+  .n3-core-pin {
+    position: sticky;
+    top: calc((100svh - var(--n3-core)) / 2 + 1.75rem);
+  }
+}
+
+@keyframes n3-hint-bob {
+  0%, 100% { transform: translateY(-1px); }
+  50% { transform: translateY(2px); }
+}
+
+.n3-hint-bob {
+  animation: n3-hint-bob 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .n3-hint-bob { animation: none; }
+}
+
 /* ---------- Stage cards: light glass that hides the lines behind the type ---------- */
 .n3-stage-card {
   border: 1px solid rgb(23 23 23 / 0.06);
@@ -311,6 +342,18 @@ const BLOCK_CSS = `
     border-color 300ms ease,
     box-shadow 300ms ease;
 }
+
+.n3-chip-num { color: var(--color-n3-grey); }
+.n3-chip-title { color: var(--color-n3-ink); }
+
+/* The main stage on a phone: a black card, like the main button */
+.n3-stage-card-main {
+  border-color: rgb(0 0 0);
+  background: rgb(0 0 0 / 0.92);
+}
+
+.n3-stage-card-main .n3-chip-num { color: rgb(255 255 255 / 0.62); }
+.n3-stage-card-main .n3-chip-title { color: #fff; }
 
 .n3-stage-card-lit {
   border-color: rgb(0 0 0 / 0.35);
@@ -961,6 +1004,24 @@ const STAGE_CARDS = {
   beadSeconds: 1.6
 }
 
+/**
+ * On a phone the visual spans the screen and the cards shrink to a number, an icon and a title,
+ * tucked between the screen edge and the plates.
+ */
+const STAGE_CARDS_PHONE = {
+  left: { edge: 3, width: 25 },
+  right: { edge: 3, width: 25 }
+}
+
+const cardLayout = (phone: boolean) => (phone ? STAGE_CARDS_PHONE : STAGE_CARDS)
+
+/**
+ * The part of the opening during which a card and its connector appear. On a computer they all
+ * come together; on a phone, where scrolling opens the stack, they arrive one by one from the bottom.
+ */
+const revealRange = (index: number, phone: boolean): [number, number] =>
+  phone ? [0.28 + index * 0.13, 0.42 + index * 0.13] : [0.35, 0.9]
+
 // ───── components/motionuikit/sections/syntra/explode-layout.ts ─────
 /**
  * The five plates, one per stage, bottom to top, cut from the three stacked slabs so that,
@@ -1506,6 +1567,23 @@ const StageCardBody = ({ index }: { index: number }) => {
   )
 }
 
+// A phone card: number and icon on one line, the stage name under it. The main stage is filled black.
+const StageChipBody = ({ index }: { index: number }) => {
+  // Vars
+  const stage = STAGES[index]
+  const Icon = 'icon' in stage ? STAGE_ICONS[stage.icon] : Code2
+
+  return (
+    <div className='flex flex-col gap-[0.35em]'>
+      <span className='n3-chip-num flex items-center gap-[0.45em] text-[0.88em] font-medium tabular-nums'>
+        <Icon className='size-[1.2em]' strokeWidth={1.8} aria-hidden />
+        {String(index + 1).padStart(2, '0')}
+      </span>
+      <p className='n3-chip-title m-0 text-[1.1em] leading-[1.2] font-semibold tracking-[-0.01em]'>{stage.title}</p>
+    </div>
+  )
+}
+
 // ───── components/motionuikit/sections/syntra/stage-cards.tsx ─────
 // Third-party Imports
 
@@ -1519,13 +1597,14 @@ type StageCardProps = {
   progress: MotionValue<number>
   open: boolean
   lit: boolean
+  phone: boolean
   onHover: (index: number | null) => void
 }
 
 // One stage card beside its plate. Hidden at rest; it fades in and eases outward as the stack opens.
-const StageCard = ({ index, progress, open, lit, onHover }: StageCardProps) => {
+const StageCard = ({ index, progress, open, lit, phone, onHover }: StageCardProps) => {
   // Hooks
-  const opacity = useTransform(progress, [0.35, 0.9], [0, 1])
+  const opacity = useTransform(progress, revealRange(index, phone), [0, 1])
 
   const x = useTransform(
     progress,
@@ -1535,7 +1614,7 @@ const StageCard = ({ index, progress, open, lit, onHover }: StageCardProps) => {
 
   // Vars
   const stage = STAGES[index]
-  const { edge, width } = STAGE_CARDS[stage.side]
+  const { edge, width } = cardLayout(phone)[stage.side]
   const left = stage.side === 'left' ? edge : 100 - edge - width
 
   const handlePointerEnter = (e: ReactPointerEvent) => {
@@ -1556,12 +1635,14 @@ const StageCard = ({ index, progress, open, lit, onHover }: StageCardProps) => {
         onPointerEnter={handlePointerEnter}
         onPointerLeave={handlePointerLeave}
         className={cn(
-          'n3-stage-card px-[0.9em] py-[0.85em]',
+          'n3-stage-card',
+          phone ? 'px-[0.8em] py-[0.65em]' : 'px-[0.9em] py-[0.85em]',
+          phone && isMain(stage) && 'n3-stage-card-main',
           open && 'pointer-events-auto',
           lit && 'n3-stage-card-lit'
         )}
       >
-        <StageCardBody index={index} />
+        {phone ? <StageChipBody index={index} /> : <StageCardBody index={index} />}
       </m.div>
     </li>
   )
@@ -1571,6 +1652,7 @@ type StageCardsProps = {
   progress: MotionValue<number>
   open: boolean
   hovered: number | null
+  phone: boolean
   onHover: (index: number | null) => void
 }
 
@@ -1578,15 +1660,26 @@ type StageCardsProps = {
  * The five stages as floating cards beside their plates, from tablet up. Font size follows the
  * visual's width (cqw), so the cards keep their place against the plates at every size.
  */
-const StageCards = ({ progress, open, hovered, onHover }: StageCardsProps) => {
+const StageCards = ({ progress, open, hovered, phone, onHover }: StageCardsProps) => {
   return (
     <ul
       aria-label='Этапы создания сайта'
       aria-hidden={!open}
-      className='pointer-events-none absolute inset-0 m-0 hidden list-none p-0 text-[clamp(10px,1.7cqw,15px)] md:block'
+      className={cn(
+        'pointer-events-none absolute inset-0 m-0 list-none p-0',
+        phone ? 'text-[11px]' : 'text-[clamp(10px,1.7cqw,15px)]'
+      )}
     >
       {STAGES.map((stage, i) => (
-        <StageCard key={stage.title} index={i} progress={progress} open={open} lit={hovered === i} onHover={onHover} />
+        <StageCard
+          key={stage.title}
+          index={i}
+          progress={progress}
+          open={open}
+          lit={hovered === i}
+          phone={phone}
+          onHover={onHover}
+        />
       ))}
     </ul>
   )
@@ -1612,6 +1705,7 @@ type SyntraStageConnectorProps = {
   lit: boolean
   active: boolean
   progress: MotionValue<number>
+  reveal: [number, number]
 }
 
 // Where the line meets the plate's corner and the card's node, in artboard units.
@@ -1632,10 +1726,11 @@ const SyntraStageConnector = ({
   lit,
   active,
   progress,
+  reveal,
   className
 }: SyntraStageConnectorProps) => {
   // Hooks
-  const show = useTransform(progress, [0.55, 0.9], [0, 1])
+  const show = useTransform(progress, reveal, [0, 1])
   const t = useMotionValue(0)
 
   const beadX = useTransform(t, k => {
@@ -1703,14 +1798,16 @@ type StageConnectorsProps = {
   progress: MotionValue<number>
   active: boolean
   hovered: number | null
+  phone: boolean
 }
 
-// Hairlines from each card to its plate, from tablet up. They tilt and float with the stack.
-const StageConnectors = ({ progress, active, hovered }: StageConnectorsProps) => {
+// Hairlines from each card to its plate. They tilt and float with the stack.
+const StageConnectors = ({ progress, active, hovered, phone }: StageConnectorsProps) => {
   return (
-    <div className='pointer-events-none absolute inset-0 hidden md:block'>
+    <div className='pointer-events-none absolute inset-0'>
       {STAGES.map((stage, i) => {
-        const { edge, width } = STAGE_CARDS[stage.side]
+        const { edge, width } = cardLayout(phone)[stage.side]
+        const [from, to] = revealRange(i, phone)
         const cardEdge = stage.side === 'left' ? (edge + width) * 10 : (100 - edge - width) * 10
 
         return (
@@ -1725,33 +1822,12 @@ const StageConnectors = ({ progress, active, hovered }: StageConnectorsProps) =>
             lit={hovered === i}
             active={active}
             progress={progress}
+            reveal={phone ? [from + 0.06, to + 0.06] : [0.55, 0.9]}
             className='pointer-events-none absolute inset-0 size-full overflow-visible'
           />
         )
       })}
     </div>
-  )
-}
-
-// ───── components/motionuikit/sections/syntra/stage-list.tsx ─────
-// Third-party Imports
-
-// On a phone the visual is too narrow for cards beside it, so they sit below it as a grid.
-const StageList = ({ reduce }: { reduce: boolean }) => {
-  return (
-    <m.ul
-      initial={reduce ? false : { opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.9, delay: 0.5, ease: EASE }}
-      aria-label='How syntra works'
-      className='m-0 grid list-none grid-cols-1 gap-2.5 p-0 text-[13px] sm:grid-cols-2 md:hidden'
-    >
-      {STAGES.map((stage, i) => (
-        <li key={stage.title} className='n3-stage-card px-[1.05em] py-[0.95em]'>
-          <StageCardBody index={i} />
-        </li>
-      ))}
-    </m.ul>
   )
 }
 
@@ -1769,6 +1845,23 @@ const isPageVisible = () => !document.hidden
 
 // The server has no tab to hide, so it renders as shown
 const isPageVisibleOnServer = () => true
+
+// Below the md breakpoint there is no hover and no room beside the core: scrolling opens it instead.
+const PHONE_QUERY = '(max-width: 767.98px)'
+
+const subscribeToPhone = (onChange: () => void) => {
+  const query = window.matchMedia(PHONE_QUERY)
+
+  query.addEventListener('change', onChange)
+
+  return () => query.removeEventListener('change', onChange)
+}
+
+const isPhone = () => window.matchMedia(PHONE_QUERY).matches
+const isPhoneOnServer = () => false
+
+// How much of the pinned scroll it takes to open the stack fully; the rest holds it open.
+const SCROLL_OPEN_SHARE = 0.8
 
 type ParallaxLayerProps = {
   x: MotionValue<number>
@@ -1812,9 +1905,13 @@ const CoreVisual = () => {
   const [open, setOpen] = useState(false)
   const [hovered, setHovered] = useState<number | null>(null)
 
+  const [scrollOpen, setScrollOpen] = useState(false)
+
   // Refs
   const pointerType = useRef('mouse')
   const visualRef = useRef<HTMLDivElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
+  const pinRef = useRef<HTMLDivElement>(null)
 
   // Hooks
   const reduce = useReducedMotion() ?? false
@@ -1822,6 +1919,7 @@ const CoreVisual = () => {
   // The margin covers the outer orbit and its beads running a little past the visual's box
   const onScreen = useInView(visualRef, { initial: true, margin: '40px' })
   const pageVisible = useSyncExternalStore(subscribeToVisibility, isPageVisible, isPageVisibleOnServer)
+  const phone = useSyncExternalStore(subscribeToPhone, isPhone, isPhoneOnServer)
 
   const px = useMotionValue(0)
   const py = useMotionValue(0)
@@ -1847,12 +1945,52 @@ const CoreVisual = () => {
 
   // Vars
 
+  // On a phone the scroll decides whether it is open, elsewhere the pointer does
+  const shown = phone ? scrollOpen : open
+
   // The beads hold still while the stack is open, off screen or in a hidden tab; both halves share it, so they stay in step
-  const beadsPaused = open || !onScreen || !pageVisible
+  const beadsPaused = shown || !onScreen || !pageVisible
 
   useEffect(() => {
-    target.set(open ? 1 : 0)
-  }, [open, target])
+    if (!phone) target.set(open ? 1 : 0)
+  }, [open, phone, target])
+
+  // On a phone the core stays pinned in the middle of the screen while the page scrolls past it,
+  // and that scroll opens the stack: halfway through the pin it is apart, then it holds.
+  useEffect(() => {
+    const track = trackRef.current
+    const pin = pinRef.current
+
+    if (!phone || !track || !pin) return
+
+    let frame = 0
+
+    const update = () => {
+      frame = 0
+
+      const room = track.offsetHeight - pin.offsetHeight
+      const moved = pin.getBoundingClientRect().top - track.getBoundingClientRect().top
+      const p = room > 0 ? Math.min(1, Math.max(0, moved / (room * SCROLL_OPEN_SHARE))) : 0
+
+      target.set(p)
+      setScrollOpen(p > 0.5)
+    }
+
+    const handleScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update)
+    }
+
+    update()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener('resize', handleScroll)
+
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('resize', handleScroll)
+      target.set(0)
+    }
+  }, [phone, target])
 
   const handlePointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (reduce || e.pointerType !== 'mouse') return
@@ -1884,7 +2022,20 @@ const CoreVisual = () => {
   }
 
   // A mouse opens it by hovering the core. Touch and keyboard have no hover, so they toggle instead.
+  // On a phone a tap scrolls the page to where the stack is open, or back to where it is closed.
   const handleCoreClick = (e: MouseEvent<HTMLButtonElement>) => {
+    const track = trackRef.current
+    const pin = pinRef.current
+
+    if (phone && track && pin) {
+      const room = (track.offsetHeight - pin.offsetHeight) * SCROLL_OPEN_SHARE
+      const moved = pin.getBoundingClientRect().top - track.getBoundingClientRect().top
+
+      window.scrollBy({ top: scrollOpen ? -moved : room - moved, behavior: reduce ? 'auto' : 'smooth' })
+
+      return
+    }
+
     if (e.detail === 0 || pointerType.current !== 'mouse') setOpen(v => !v)
   }
 
@@ -1894,13 +2045,18 @@ const CoreVisual = () => {
 
   return (
     <LazyMotion features={domAnimation}>
-      <>
+      {/**
+       * On a phone the track is taller than the screen and the visual is pinned inside it, so the
+       * page scrolls past while the core opens. From tablet up both wrappers are plain boxes.
+       */}
+      <div ref={trackRef} className='n3-core-track relative'>
+        <div ref={pinRef} className='n3-core-pin'>
         {/* Fades and scales in with CSS (n3-enter), from the first paint rather than after hydration. */}
         <div
           ref={visualRef}
           onPointerMove={handlePointerMove}
           onPointerLeave={handlePointerLeave}
-          className='n3-enter @container relative -my-[6%] -ml-[12.5%] aspect-square w-[125%] max-w-none md:mx-auto md:my-0 md:w-full md:max-w-[840px] lg:mx-0 lg:w-[104%] lg:max-w-none'
+          className='n3-enter @container relative mx-auto aspect-square w-(--n3-core) max-w-none md:my-0 md:w-full md:max-w-[840px] lg:mx-0 lg:w-[104%] lg:max-w-none'
         >
           <div className='absolute inset-0'>
             <div aria-hidden className='n3-halo pointer-events-none absolute inset-[6%]' />
@@ -1939,7 +2095,7 @@ const CoreVisual = () => {
               <m.div style={{ opacity: explodedOpacity }} className='absolute inset-0'>
                 <SyntraExplodedCore progress={progress} className='absolute inset-0 size-full overflow-visible' />
               </m.div>
-              <StageConnectors progress={progress} active={open && !reduce} hovered={hovered} />
+              <StageConnectors key={phone ? 'phone' : 'wide'} progress={progress} active={shown && !reduce} hovered={hovered} phone={phone} />
             </Tilted>
 
             <ParallaxLayer x={x} y={y} reach={MOTION.ringParallax}>
@@ -1955,24 +2111,40 @@ const CoreVisual = () => {
 
             {/* The cards ride the same tilt and float in a layer of their own, above the front orbit. */}
             <Tilted rotateX={rotateX} rotateY={rotateY}>
-              <StageCards progress={progress} open={open} hovered={hovered} onHover={handleCardHover} />
+              <StageCards
+                key={phone ? 'phone' : 'wide'}
+                progress={progress}
+                open={shown}
+                hovered={hovered}
+                phone={phone}
+                onHover={handleCardHover}
+              />
             </Tilted>
           </div>
 
-          {/* A quiet invitation under the core. Touch screens have no hover, so they are told to tap. */}
+          {/* A quiet invitation under the core: hover with a mouse, tap on a tablet, scroll on a phone. */}
           <m.p
             aria-hidden
             style={{ opacity: hintOpacity }}
             className='text-(color:--color-n3-grey) pointer-events-none absolute top-[84%] left-1/2 m-0 flex -translate-x-1/2 items-center gap-1.5 text-[12.5px] whitespace-nowrap'
           >
-            <MousePointer2 className='text-(color:--color-n3-accent) size-3.5' strokeWidth={1.8} />
-            <span className='[@media(hover:none)]:hidden'>Наведите, чтобы увидеть этапы работы</span>
-            <span className='hidden [@media(hover:none)]:inline'>Нажмите, чтобы увидеть этапы работы</span>
+            {phone ? (
+              <>
+                <ArrowDown className='n3-hint-bob text-(color:--color-n3-accent) size-3.5' strokeWidth={1.8} />
+                <span>Листайте вниз, чтобы увидеть этапы работы</span>
+              </>
+            ) : (
+              <>
+                <MousePointer2 className='text-(color:--color-n3-accent) size-3.5' strokeWidth={1.8} />
+                <span className='[@media(hover:none)]:hidden'>Наведите, чтобы увидеть этапы работы</span>
+                <span className='hidden [@media(hover:none)]:inline'>Нажмите, чтобы увидеть этапы работы</span>
+              </>
+            )}
           </m.p>
 
           <button
             type='button'
-            aria-expanded={open}
+            aria-expanded={shown}
             aria-label='Показать этапы создания сайта'
             onPointerDown={handleCorePointerDown}
             onPointerEnter={handleCorePointerEnter}
@@ -1981,8 +2153,8 @@ const CoreVisual = () => {
             className='focus-visible:outline-(color:--color-n3-accent) absolute top-[30%] left-[22%] h-[44%] w-[56%] cursor-pointer rounded-[3rem] focus-visible:outline-2 focus-visible:outline-offset-4'
           />
         </div>
-        <StageList reduce={reduce} />
-      </>
+        </div>
+      </div>
     </LazyMotion>
   )
 }

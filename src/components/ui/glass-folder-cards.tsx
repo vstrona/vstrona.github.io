@@ -502,11 +502,12 @@ function ArtCanvas({
 
 const W = 340
 const H = 272
-const HEADROOM = 54 // room above the back panel for the files to rise into
+const HEADROOM = 104 // room above the back panel for the files to rise into, so an opened folder shows its screenshots
 const FRONT_TOP = 74
 const FRONT_H = H - FRONT_TOP
-const SHEET_W = 272
+const SHEET_W = 248
 const SHEET_H = 184
+const SHEET_BAR = 28 // the caption bar at the top of a sheet; the picture fits in the rest
 
 const BACK_PATH =
   "M0 56A22 22 0 0 1 22 34L146 34C170 34 172 0 198 0L318 0A22 22 0 0 1 340 22L340 250A22 22 0 0 1 318 272L22 272A22 22 0 0 1 0 250Z"
@@ -789,7 +790,7 @@ export default function GlassFolder({
                 <>
                   {picture ? (
                     file.image ? (
-                      <img className="gf-sheet-art" src={file.image} alt="" width={SHEET_W} height={SHEET_H} draggable={false} />
+                      <img className="gf-sheet-art" src={file.image} alt="" width={SHEET_W} height={SHEET_H - SHEET_BAR} draggable={false} />
                     ) : (
                       <ArtCanvas
                         className="gf-sheet-art"
@@ -934,8 +935,9 @@ const GF_CSS = `
   isolation: isolate;
 }
 .gf-root[data-tone="dark"] { --gf-ink: #f5f5f7; --gf-ink-soft: rgba(245, 245, 247, .58); }
-.gf-root:hover, .gf-root:focus-within { --gf-hinge: -11deg; --gf-lift: -34px; --gf-spread: 8px; --gf-fan: 1.4deg; --gf-stack: 10px; }
-.gf-root[data-open] { --gf-hinge: -24deg; --gf-lift: -96px; --gf-spread: 40px; --gf-fan: 5deg; --gf-stack: 30px; }
+.gf-root:hover, .gf-root:focus-within { --gf-hinge: -11deg; --gf-lift: -34px; --gf-spread: 6px; --gf-fan: 1deg; --gf-stack: 10px; }
+/* the fan stays inside the folder: sheets rise into the headroom but never past its sides */
+.gf-root[data-open] { --gf-hinge: -24deg; --gf-lift: -150px; --gf-spread: 12px; --gf-fan: 2deg; --gf-stack: 16px; }
 
 .gf-stage {
   position: absolute;
@@ -1020,11 +1022,11 @@ canvas.gf-art[data-ready] { opacity: 1; filter: none; }
   all: unset;
   box-sizing: border-box;
   position: absolute;
-  left: 34px;
+  left: 46px;
   top: 96px;
-  width: 272px;
+  width: 248px;
   height: 184px;
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: hidden;
   cursor: pointer;
   pointer-events: auto;
@@ -1044,25 +1046,26 @@ canvas.gf-art[data-ready] { opacity: 1; filter: none; }
     opacity .9s var(--gf-ease);
 }
 .gf-root[data-tone="dark"] .gf-sheet { background: linear-gradient(180deg, #2c2c30 0%, #1c1c1f 100%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 0 0 .5px rgba(255, 255, 255, .08), 0 12px 28px -8px rgba(0, 0, 0, .7); }
-.gf-sheet--art { background: #1a1a1d; }
+.gf-sheet--art { background: #eceef1; }
 .gf-root[data-open] .gf-sheet:hover,
 .gf-root[data-open] .gf-sheet:focus-visible {
   transform:
-    translate(calc(var(--gf-jx) + var(--gf-slot) * var(--gf-spread)), calc(var(--gf-lift) + var(--gf-depth) * var(--gf-stack) * -1 - 18px))
+    translate(calc(var(--gf-jx) + var(--gf-slot) * var(--gf-spread)), calc(var(--gf-lift) + var(--gf-depth) * var(--gf-stack) * -1 - 26px))
     rotate(calc(var(--gf-slot) * var(--gf-fan) * .6));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 0 0 .5px rgba(0, 0, 0, .1), 0 22px 40px -12px rgba(10, 12, 20, .42);
   transition-delay: 0s;
 }
 .gf-sheet:focus-visible { outline: 2px solid #000; outline-offset: 2px; }
+/* the whole screenshot, letterboxed on a quiet grey, never cropped */
 .gf-sheet-art {
   position: absolute;
-  left: 0;
-  top: 0;
-  width: 272px;
-  height: 184px;
+  left: 6px;
+  top: 34px;
+  width: 236px;
+  height: 144px;
   max-width: none;
-  object-fit: cover;
-  object-position: 50% 0;
+  object-fit: contain;
+  object-position: 50% 50%;
   transition: opacity .9s var(--gf-ease), filter .9s var(--gf-ease);
 }
 canvas.gf-sheet-art { opacity: 0; filter: blur(10px); }
@@ -1072,18 +1075,20 @@ canvas.gf-sheet-art[data-ready] { opacity: 1; filter: none; }
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(180deg, rgba(0, 0, 0, .42) 0%, rgba(0, 0, 0, 0) 34%);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06);
   pointer-events: none;
 }
 .gf-sheet-head {
   position: absolute;
-  left: 14px;
-  right: 14px;
-  top: 11px;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 28px;
+  padding: 0 12px;
+  box-sizing: border-box;
   z-index: 1;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 10px;
   white-space: nowrap;
@@ -1103,8 +1108,9 @@ canvas.gf-sheet-art[data-ready] { opacity: 1; filter: none; }
   letter-spacing: .02em;
   color: rgba(24, 24, 27, .5);
 }
-.gf-root[data-tone="dark"] .gf-sheet-name, .gf-sheet--art .gf-sheet-name { color: #fafafa; }
-.gf-root[data-tone="dark"] .gf-sheet-meta, .gf-sheet--art .gf-sheet-meta { color: rgba(250, 250, 250, .66); }
+.gf-sheet--art .gf-sheet-head { background: #fff; border-bottom: 1px solid rgba(0, 0, 0, .06); }
+.gf-root[data-tone="dark"] .gf-sheet-name { color: #fafafa; }
+.gf-root[data-tone="dark"] .gf-sheet-meta { color: rgba(250, 250, 250, .66); }
 .gf-lines {
   position: absolute;
   left: 14px;

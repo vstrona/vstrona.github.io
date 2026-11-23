@@ -81,7 +81,7 @@ export default function WorksFolders({ works }: { works: Work[] }) {
   return (
     <div
       ref={ref}
-      className='grid justify-center gap-x-10 gap-y-16'
+      className='grid justify-center gap-x-10 gap-y-4'
       style={{ gridTemplateColumns: `repeat(${cols}, ${width}px)` }}
     >
       {works.map((work, i) => {
