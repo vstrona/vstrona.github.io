@@ -1,11 +1,15 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import App from './App'
+import CoreHero from '@/components/ui/syntra-hero'
 import './index.css'
-import './dialogs.css'
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-)
+// Весь сайт обычный HTML, React рисует только первый экран с 3D-ядром
+const mount = document.getElementById('top')
+
+if (mount) {
+  createRoot(mount).render(
+    <StrictMode>
+      <CoreHero />
+    </StrictMode>
+  )
+}

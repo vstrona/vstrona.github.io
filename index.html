@@ -1,24 +1,143 @@
 <!doctype html>
 <html lang="ru">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Виктор Стронов · сайты, магазины и Telegram боты под ключ</title>
-    <meta name="description" content="Виктор Стронов делает сайты, магазины и Telegram ботов под ключ: от задачи и дизайна до сервера и запуска. Работы с видео и скриншотами." />
-    <meta name="theme-color" content="#0a0a0a" />
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Виктор Стронов · сайты под ключ" />
-    <meta property="og:description" content="Сайты, магазины и Telegram боты под ключ. Один человек на всех этапах." />
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0a'/%3E%3Ctext x='16' y='22' font-family='Arial,sans-serif' font-size='15' font-weight='500' fill='%23f2f2f2' text-anchor='middle'%3EВС%3C/text%3E%3C/svg%3E" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500&display=swap" rel="stylesheet" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <noscript>
-      <p style="padding:24px;font:17px/1.6 sans-serif;color:#f2f2f2">Виктор Стронов: сайты, магазины и Telegram боты под ключ. Telegram <a style="color:#f2f2f2" href="https://t.me/ortikc">@ortikc</a>, почта keuj22@yandex.ru. Чтобы увидеть работы, включите JavaScript.</p>
-    </noscript>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Виктор Стронов · Сделаю вам сайт</title>
+  <meta name="description" content="Портфолио Виктора Стронова: сайты, магазины и Telegram боты под ключ. Видео, скриншоты и описание каждой работы.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Виктор Стронов · Сделаю вам сайт">
+  <meta property="og:description" content="Сайты, магазины и Telegram боты под ключ.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23000'/%3E%3Ctext x='16' y='22.5' font-family='Arial,sans-serif' font-size='17' font-weight='700' fill='%23fff' text-anchor='middle'%3EВС%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+  <a class="skip-link button-sm" href="#works">Перейти к работам</a>
+
+  <nav class="nav" aria-label="Разделы">
+    <a class="nav__link nav__name title-3" href="#top">Виктор Стронов</a>
+    <a class="nav__link title-4" href="#works" data-nav="works">Работы</a>
+    <a class="nav__link title-4" href="#contacts" data-nav="contacts">Контакты</a>
+  </nav>
+
+  <!-- Первый экран с 3D-ядром рисует React (src/main.tsx). Без скрипта видно этот текст. -->
+  <header id="top">
+    <div class="core-hero-fallback container">
+      <h1 class="heading-1">Сделаю вам сайт, магазин или бота, который продаёт.</h1>
+      <p class="body-7 muted">Беру на себя всё: задачу, дизайн, разработку, сервер и запуск.</p>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="works container" id="works" aria-labelledby="works-title">
+      <div class="section-head">
+        <h2 class="heading-2" id="works-title" data-reveal>Работы</h2>
+        <p class="body-3 muted" data-reveal>Нажмите на работу, чтобы открыть видео, скриншоты и описание проекта.</p>
+      </div>
+      <div class="works__grid" id="works-grid"></div>
+      <noscript><p class="body-3 muted">Чтобы увидеть работы, включите JavaScript.</p></noscript>
+    </section>
+
+    <section class="contacts container" id="contacts" aria-labelledby="contacts-title">
+      <div class="contacts__card">
+        <div class="contacts__intro">
+          <h2 class="heading-2" id="contacts-title" data-reveal>Обсудим ваш проект</h2>
+          <p class="body-7 contacts__lead" data-reveal>Расскажите, что нужно сделать, и я отвечу, как это собрать, сколько времени займёт и сколько будет стоить.</p>
+          <a class="btn btn--light button-md" href="https://t.me/ortikc" target="_blank" rel="noopener" data-reveal>Написать в Telegram <i class="ph ph-arrow-up-right" aria-hidden="true"></i></a>
+        </div>
+
+        <ul class="contacts__rows" data-reveal>
+          <li>
+            <a class="contact-row" href="https://t.me/ortikc" target="_blank" rel="noopener">
+              <span class="contact-row__icon"><i class="ph ph-telegram-logo" aria-hidden="true"></i></span>
+              <span class="contact-row__text"><span class="caption-2">Telegram</span><span class="title-2">@ortikc</span></span>
+              <i class="ph ph-arrow-up-right contact-row__go" aria-hidden="true"></i>
+            </a>
+          </li>
+          <li class="contact-row-wrap">
+            <a class="contact-row" href="mailto:keuj22@yandex.ru">
+              <span class="contact-row__icon"><i class="ph ph-envelope-simple" aria-hidden="true"></i></span>
+              <span class="contact-row__text"><span class="caption-2">Почта</span><span class="title-2">keuj22@yandex.ru</span></span>
+            </a>
+            <button class="contact-copy" type="button" data-copy="keuj22@yandex.ru" aria-label="Скопировать почту">
+              <i class="ph ph-copy" aria-hidden="true"></i>
+            </button>
+          </li>
+          <li>
+            <a class="contact-row" href="https://kwork.ru/user/ortikcc" target="_blank" rel="noopener">
+              <span class="contact-row__icon"><i class="ph ph-briefcase" aria-hidden="true"></i></span>
+              <span class="contact-row__text"><span class="caption-2">Kwork</span><span class="title-2">ortikcc</span></span>
+              <i class="ph ph-arrow-up-right contact-row__go" aria-hidden="true"></i>
+            </a>
+          </li>
+        </ul>
+        <p class="contacts__toast caption-2" id="copy-toast" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer container">
+    <p class="caption-2 muted">© <span id="year">2026</span> Виктор Стронов</p>
+    <a class="caption-2 muted footer__up" href="#top">Наверх <i class="ph ph-arrow-up" aria-hidden="true"></i></a>
+  </footer>
+
+  <dialog class="modal" id="work-modal" aria-labelledby="modal-title">
+    <article class="modal__panel">
+      <header class="modal__head">
+        <div>
+          <h2 class="modal__title heading-4" id="modal-title"></h2>
+          <p class="body-3 muted" id="modal-short"></p>
+        </div>
+        <button class="icon-btn modal__close" type="button" aria-label="Закрыть" data-close>
+          <i class="ph ph-x" aria-hidden="true"></i>
+        </button>
+      </header>
+
+      <div class="modal__video" id="modal-video"></div>
+
+      <div class="modal__gallery-wrap" id="modal-gallery-wrap">
+        <div class="modal__gallery" id="modal-gallery" tabindex="0" aria-label="Скриншоты"></div>
+        <div class="modal__arrows">
+          <button type="button" class="icon-btn arrow" data-dir="-1" aria-label="Предыдущий скриншот"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
+          <button type="button" class="icon-btn arrow" data-dir="1" aria-label="Следующий скриншот"><i class="ph ph-caret-right" aria-hidden="true"></i></button>
+        </div>
+      </div>
+
+      <div class="modal__info">
+        <div class="modal__desc body-3" id="modal-desc"></div>
+        <aside class="modal__meta">
+          <dl id="modal-meta"></dl>
+          <a class="btn button-md" id="modal-link" href="#" target="_blank" rel="noopener">Открыть сайт <i class="ph ph-arrow-up-right" aria-hidden="true"></i></a>
+          <div class="modal__links" id="modal-links"></div>
+        </aside>
+      </div>
+    </article>
+  </dialog>
+
+  <dialog class="viewer" id="viewer" aria-label="Просмотр скриншота">
+    <div class="viewer__stage" id="viewer-stage">
+      <img id="viewer-img" alt="" draggable="false">
+    </div>
+    <div class="viewer__bar">
+      <span class="viewer__count title-4" id="viewer-count"></span>
+      <div class="viewer__tools">
+        <button type="button" class="viewer__btn" data-viewer="out" aria-label="Отдалить"><i class="ph ph-magnifying-glass-minus" aria-hidden="true"></i></button>
+        <button type="button" class="viewer__btn" data-viewer="in" aria-label="Приблизить"><i class="ph ph-magnifying-glass-plus" aria-hidden="true"></i></button>
+        <button type="button" class="viewer__btn" data-viewer="close" aria-label="Закрыть просмотр"><i class="ph ph-x" aria-hidden="true"></i></button>
+      </div>
+    </div>
+    <button type="button" class="viewer__btn viewer__nav viewer__nav--prev" data-viewer="prev" aria-label="Предыдущий скриншот"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
+    <button type="button" class="viewer__btn viewer__nav viewer__nav--next" data-viewer="next" aria-label="Следующий скриншот"><i class="ph ph-caret-right" aria-hidden="true"></i></button>
+    <p class="viewer__hint caption-2"><span class="only-desktop">Колесо мыши приближает, двойной клик тоже. Стрелки листают, Esc закрывает</span><span class="only-touch">Два пальца приближают, свайп листает, свайп вниз закрывает</span></p>
+  </dialog>
+
+  <script src="js/works.js"></script>
+  <script src="js/viewer.js"></script>
+  <script src="js/script.js"></script>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
 </html>
