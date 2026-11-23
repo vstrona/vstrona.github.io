@@ -402,8 +402,15 @@
     });
   });
 
+  // Папки с работами (src/components/works-folders.tsx) открывают окно проекта и просмотр через это
+  window.portfolio = {
+    openWork: function (i, trigger) { if (works[i]) openWork(i, trigger || null); },
+    openShot: function (i, n) { var w = works[i]; if (w && w.images) viewer.open(w.images, n, w.title); }
+  };
+
   renderFan();
-  renderCards();
+  // Папки рисует React. Старые карточки остаются только для браузеров без модулей
+  if (!('noModule' in HTMLScriptElement.prototype)) renderCards();
   reveal();
   navCurrent();
 })();
