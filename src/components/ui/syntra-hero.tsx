@@ -305,13 +305,29 @@ const BLOCK_CSS = `
 @media (max-width: 767.98px) {
   .n3-core-track {
     margin-inline: calc(var(--n3-gutter) * -1);
-    height: calc(var(--n3-core) + 110svh);
+    height: calc(var(--n3-core) + 24svh);
   }
 
   .n3-core-pin {
     position: sticky;
     top: calc((100svh - var(--n3-core)) / 2 + 1.75rem);
   }
+
+  /* Blurring the page behind each card on every frame of the opening is what made phones stutter. */
+  .n3-core-track .n3-stage-card {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: rgb(255 255 255 / 0.96);
+  }
+
+  .n3-core-track .n3-stage-card-main {
+    background: #000;
+  }
+}
+
+/* Soft blurred glows are redrawn every frame the plates move; a phone does without them. */
+.n3-lite [filter] {
+  display: none;
 }
 
 @keyframes n3-hint-bob {
@@ -964,6 +980,9 @@ const EXPLODE = {
   // Spring that drives the whole reveal. Lower stiffness = slower, softer; higher damping = less settle.
   spring: { stiffness: 105, damping: 25, mass: 1 },
 
+  // On a phone the scroll opens it, so it snaps open quicker: about half a second.
+  phoneSpring: { stiffness: 190, damping: 27, mass: 1 },
+
   // Distance between neighbouring plates once apart, in artboard units. Larger = a taller stack.
   gap: 94,
 
@@ -1020,7 +1039,7 @@ const cardLayout = (phone: boolean) => (phone ? STAGE_CARDS_PHONE : STAGE_CARDS)
  * come together; on a phone, where scrolling opens the stack, they arrive one by one from the bottom.
  */
 const revealRange = (index: number, phone: boolean): [number, number] =>
-  phone ? [0.28 + index * 0.13, 0.42 + index * 0.13] : [0.35, 0.9]
+  phone ? [0.2 + index * 0.1, 0.4 + index * 0.1] : [0.35, 0.9]
 
 // ───── components/motionuikit/sections/syntra/explode-layout.ts ─────
 /**
@@ -1038,12 +1057,20 @@ const PLATE_SLABS: SlabType[] = [
 
 const AI_PLATE = 2
 
-// Where each plate's top face sits once apart, and how far it travels to get there.
-const TARGET_TOPS = PLATE_SLABS.map(
-  (_, i) => EXPLODE.topPlateY + (PLATE_SLABS.length - 1 - i) * EXPLODE.gap - (i === AI_PLATE ? EXPLODE.aiLift : 0)
-)
+// Where each plate's top face sits once apart.
+const targetTops = (gap: number, topPlateY: number) =>
+  PLATE_SLABS.map((_, i) => topPlateY + (PLATE_SLABS.length - 1 - i) * gap - (i === AI_PLATE ? EXPLODE.aiLift : 0))
 
-const TRAVEL = PLATE_SLABS.map((slab, i) => TARGET_TOPS[i] - slab.top)
+/**
+ * A phone has height to spare and little width, so there the plates part further, centred on the
+ * same point, and the small cards beside them get room to breathe.
+ */
+const PHONE_EXPLODE = { gap: 150, topPlateY: 118 }
+
+const TARGET_TOPS = targetTops(EXPLODE.gap, EXPLODE.topPlateY)
+const TARGET_TOPS_PHONE = targetTops(PHONE_EXPLODE.gap, PHONE_EXPLODE.topPlateY)
+
+const tops = (phone: boolean) => (phone ? TARGET_TOPS_PHONE : TARGET_TOPS)
 
 const clamp = (v: number) => Math.min(1, Math.max(0, v))
 
@@ -1054,7 +1081,7 @@ const plateProgress = (i: number, p: number) => {
   return clamp((p - delay) / (1 - delay))
 }
 
-const plateY = (i: number, p: number) => TRAVEL[i] * plateProgress(i, p)
+const plateY = (i: number, p: number, phone: boolean) => (tops(phone)[i] - PLATE_SLABS[i].top) * plateProgress(i, p)
 const plateScale = (i: number, p: number) => 1 + (EXPLODE.scales[i] - 1) * plateProgress(i, p)
 
 // Screen x of a plate's left/right corner tip once apart (rounded corners pull the tip in).
@@ -1067,7 +1094,7 @@ const tipOffset = (i: number) => {
 const tipX = (i: number, side: 'left' | 'right') => CX + (side === 'right' ? 1 : -1) * tipOffset(i)
 
 // Screen y of the side corners (half way down the plate) once apart.
-const cornerY = (i: number) => TARGET_TOPS[i] + PLATE_SLABS[i].depth / 2
+const cornerY = (i: number, phone: boolean) => tops(phone)[i] + PLATE_SLABS[i].depth / 2
 
 // ───── assets/motionuikit/svg/syntra-exploded-core.tsx ─────
 // Third-party Imports
@@ -1085,12 +1112,13 @@ const SKIRT = [0, 4, 0, 10, 10]
 type PlateProps = {
   index: number
   progress: MotionValue<number>
+  phone: boolean
   children: ReactNode
 }
 
-const Plate = ({ index, progress, children }: PlateProps) => {
+const Plate = ({ index, progress, phone, children }: PlateProps) => {
   // Hooks
-  const y = useTransform(progress, v => plateY(index, v))
+  const y = useTransform(progress, v => plateY(index, v, phone))
   const scale = useTransform(progress, v => plateScale(index, v))
   const apart = useTransform(progress, v => plateProgress(index, v))
   const shadow = useTransform(apart, v => v * 0.16)
@@ -1171,13 +1199,13 @@ const AiEmphasis = ({ progress }: { progress: MotionValue<number> }) => {
   )
 }
 
-type SyntraExplodedCoreProps = SVGProps<SVGSVGElement> & { progress: MotionValue<number> }
+type SyntraExplodedCoreProps = SVGProps<SVGSVGElement> & { progress: MotionValue<number>; phone: boolean }
 
 /**
  * The core taken apart into its five stage plates, driven by `progress`. The AI plate's underglow
  * strengthens as the stack opens, on top of the resting glow.
  */
-const SyntraExplodedCore = ({ progress, ...props }: SyntraExplodedCoreProps) => {
+const SyntraExplodedCore = ({ progress, phone, ...props }: SyntraExplodedCoreProps) => {
   // Hooks
   const strongGlow = useTransform(progress, v => clamp2((v - 0.4) / 0.5) * 0.6)
 
@@ -1195,7 +1223,7 @@ const SyntraExplodedCore = ({ progress, ...props }: SyntraExplodedCoreProps) => 
     <svg viewBox='0 0 1000 1000' aria-hidden {...props}>
       <CoreDefs />
 
-      <Plate index={0} progress={progress}>
+      <Plate index={0} progress={progress} phone={phone}>
         <SlabBody slab={PLATE_SLABS[0]} />
         <SlabTop slab={PLATE_SLABS[0]} groove={10} />
         <PlateNumber slab={PLATE_SLABS[0]} n={1} />
@@ -1206,7 +1234,7 @@ const SyntraExplodedCore = ({ progress, ...props }: SyntraExplodedCoreProps) => 
         <FaceMark slab={BASE} side='left' u={0.4} v={0.62} w={4.5} h={4.5} fill='url(#n3-slot)' />
       </Plate>
 
-      <Plate index={1} progress={progress}>
+      <Plate index={1} progress={progress} phone={phone}>
         <SlabBody slab={PLATE_SLABS[1]} />
         <SlabTop slab={PLATE_SLABS[1]} groove={10} />
         <PlateNumber slab={PLATE_SLABS[1]} n={2} />
@@ -1214,7 +1242,7 @@ const SyntraExplodedCore = ({ progress, ...props }: SyntraExplodedCoreProps) => 
         <PanelLine slab={BASE} side='right' v={0.3} />
       </Plate>
 
-      <Plate index={AI_PLATE} progress={progress}>
+      <Plate index={AI_PLATE} progress={progress} phone={phone}>
         <g className='n3-seam-pulse'>
           <path d={topPath(MID, 4, CX, BASE.top - MID.top)} fill={ORANGE3} opacity='0.24' filter='url(#n3-blur-spill)' />
           <path d={bodyPath(seam)} fill={ORANGE3} opacity='0.6' filter='url(#n3-blur-glow)' />
@@ -1242,14 +1270,14 @@ const SyntraExplodedCore = ({ progress, ...props }: SyntraExplodedCoreProps) => 
         <AiEmphasis progress={progress} />
       </Plate>
 
-      <Plate index={3} progress={progress}>
+      <Plate index={3} progress={progress} phone={phone}>
         <SlabBody slab={PLATE_SLABS[3]} />
         <SlabTop slab={PLATE_SLABS[3]} />
         {inlay(PLATE_SLABS[3])}
         <PlateNumber slab={PLATE_SLABS[3]} n={4} />
       </Plate>
 
-      <Plate index={4} progress={progress}>
+      <Plate index={4} progress={progress} phone={phone}>
         <SlabBody slab={PLATE_SLABS[4]} />
         <SlabTop slab={PLATE_SLABS[4]} />
         {inlay(CAP)}
@@ -1627,7 +1655,7 @@ const StageCard = ({ index, progress, open, lit, phone, onHover }: StageCardProp
 
   return (
     <li
-      style={{ top: pct(cornerY(index)), left: `${left}%`, width: `${width}%` }}
+      style={{ top: pct(cornerY(index, phone)), left: `${left}%`, width: `${width}%` }}
       className='absolute -translate-y-1/2'
     >
       <m.div
@@ -1815,7 +1843,7 @@ const StageConnectors = ({ progress, active, hovered, phone }: StageConnectorsPr
             key={stage.title}
             plate={tipX(i, stage.side)}
             card={cardEdge}
-            y={cornerY(i)}
+            y={cornerY(i, phone)}
             side={stage.side}
             index={i}
             main={isMain(stage)}
@@ -1860,8 +1888,8 @@ const subscribeToPhone = (onChange: () => void) => {
 const isPhone = () => window.matchMedia(PHONE_QUERY).matches
 const isPhoneOnServer = () => false
 
-// How much of the pinned scroll it takes to open the stack fully; the rest holds it open.
-const SCROLL_OPEN_SHARE = 0.8
+// The stack opens once the core is this many px from its pinned place, so it is open as it settles.
+const OPEN_BEFORE_PIN = 140
 
 type ParallaxLayerProps = {
   x: MotionValue<number>
@@ -1910,7 +1938,6 @@ const CoreVisual = () => {
   // Refs
   const pointerType = useRef('mouse')
   const visualRef = useRef<HTMLDivElement>(null)
-  const trackRef = useRef<HTMLDivElement>(null)
   const pinRef = useRef<HTMLDivElement>(null)
 
   // Hooks
@@ -1929,7 +1956,7 @@ const CoreVisual = () => {
 
   // 0 = stacked, 1 = apart. One spring drives the plates, connectors, cards and shadow together.
   const target = useMotionValue(0)
-  const progress = useSpring(target, reduce ? { duration: 0.01 } : EXPLODE.spring)
+  const progress = useSpring(target, reduce ? { duration: 0.01 } : phone ? EXPLODE.phoneSpring : EXPLODE.spring)
 
   // While it is open the stack also leans back a little more, which is where the extra depth comes from.
   const rotateX = useTransform([y, progress], ([v, p]: number[]) => v * -MOTION.tiltDegrees + p * 4)
@@ -1952,45 +1979,58 @@ const CoreVisual = () => {
   const beadsPaused = shown || !onScreen || !pageVisible
 
   useEffect(() => {
-    if (!phone) target.set(open ? 1 : 0)
-  }, [open, phone, target])
+    target.set(shown ? 1 : 0)
+  }, [shown, target])
 
-  // On a phone the core stays pinned in the middle of the screen while the page scrolls past it,
-  // and that scroll opens the stack: halfway through the pin it is apart, then it holds.
+  /**
+   * On a phone the core opens by itself as it scrolls into the middle of the screen and closes when
+   * scrolled back above it. It then stays pinned only briefly, so the works follow straight after.
+   * Only crossing that line changes anything, so scrolling costs no rendering.
+   */
   useEffect(() => {
-    const track = trackRef.current
     const pin = pinRef.current
 
-    if (!phone || !track || !pin) return
+    if (!phone || !pin) return
 
     let frame = 0
+    let stick = 0
+    let last: boolean | null = null
+
+    const measure = () => {
+      stick = parseFloat(getComputedStyle(pin).top) || 0
+    }
 
     const update = () => {
       frame = 0
 
-      const room = track.offsetHeight - pin.offsetHeight
-      const moved = pin.getBoundingClientRect().top - track.getBoundingClientRect().top
-      const p = room > 0 ? Math.min(1, Math.max(0, moved / (room * SCROLL_OPEN_SHARE))) : 0
+      const next = pin.getBoundingClientRect().top <= stick + OPEN_BEFORE_PIN
 
-      target.set(p)
-      setScrollOpen(p > 0.5)
+      if (next !== last) {
+        last = next
+        setScrollOpen(next)
+      }
     }
 
     const handleScroll = () => {
       if (!frame) frame = requestAnimationFrame(update)
     }
 
+    const handleResize = () => {
+      measure()
+      handleScroll()
+    }
+
+    measure()
     update()
     window.addEventListener('scroll', handleScroll, { passive: true })
-    window.addEventListener('resize', handleScroll)
+    window.addEventListener('resize', handleResize)
 
     return () => {
       cancelAnimationFrame(frame)
       window.removeEventListener('scroll', handleScroll)
-      window.removeEventListener('resize', handleScroll)
-      target.set(0)
+      window.removeEventListener('resize', handleResize)
     }
-  }, [phone, target])
+  }, [phone])
 
   const handlePointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (reduce || e.pointerType !== 'mouse') return
@@ -2022,21 +2062,9 @@ const CoreVisual = () => {
   }
 
   // A mouse opens it by hovering the core. Touch and keyboard have no hover, so they toggle instead.
-  // On a phone a tap scrolls the page to where the stack is open, or back to where it is closed.
   const handleCoreClick = (e: MouseEvent<HTMLButtonElement>) => {
-    const track = trackRef.current
-    const pin = pinRef.current
-
-    if (phone && track && pin) {
-      const room = (track.offsetHeight - pin.offsetHeight) * SCROLL_OPEN_SHARE
-      const moved = pin.getBoundingClientRect().top - track.getBoundingClientRect().top
-
-      window.scrollBy({ top: scrollOpen ? -moved : room - moved, behavior: reduce ? 'auto' : 'smooth' })
-
-      return
-    }
-
-    if (e.detail === 0 || pointerType.current !== 'mouse') setOpen(v => !v)
+    if (phone) setScrollOpen(v => !v)
+    else if (e.detail === 0 || pointerType.current !== 'mouse') setOpen(v => !v)
   }
 
   const handleCoreBlur = () => {
@@ -2049,7 +2077,7 @@ const CoreVisual = () => {
        * On a phone the track is taller than the screen and the visual is pinned inside it, so the
        * page scrolls past while the core opens. From tablet up both wrappers are plain boxes.
        */}
-      <div ref={trackRef} className='n3-core-track relative'>
+      <div className='n3-core-track relative'>
         <div ref={pinRef} className='n3-core-pin'>
         {/* Fades and scales in with CSS (n3-enter), from the first paint rather than after hydration. */}
         <div
@@ -2093,7 +2121,11 @@ const CoreVisual = () => {
                 <SyntraCoreObject className='absolute inset-0 size-full overflow-visible' />
               </m.div>
               <m.div style={{ opacity: explodedOpacity }} className='absolute inset-0'>
-                <SyntraExplodedCore progress={progress} className='absolute inset-0 size-full overflow-visible' />
+                <SyntraExplodedCore
+                  progress={progress}
+                  phone={phone}
+                  className={cn('absolute inset-0 size-full overflow-visible', phone && 'n3-lite')}
+                />
               </m.div>
               <StageConnectors key={phone ? 'phone' : 'wide'} progress={progress} active={shown && !reduce} hovered={hovered} phone={phone} />
             </Tilted>
@@ -2131,7 +2163,7 @@ const CoreVisual = () => {
             {phone ? (
               <>
                 <ArrowDown className='n3-hint-bob text-(color:--color-n3-accent) size-3.5' strokeWidth={1.8} />
-                <span>Листайте вниз, чтобы увидеть этапы работы</span>
+                <span>Листайте вниз, и откроются этапы работы</span>
               </>
             ) : (
               <>
