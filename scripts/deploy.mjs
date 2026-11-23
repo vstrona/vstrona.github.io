@@ -22,7 +22,11 @@ writeFileSync(path.join(dist, '.nojekyll'), '')
 // В dist отдельный временный репозиторий с одной веткой gh-pages
 run('git init -q -b gh-pages', dist)
 run('git add -A', dist)
-run(`git commit -q -m "Сайт из ${commit}"`, dist)
+// Автор коммита тот же, что в основном репозитории
+const name = read('git config user.name')
+const email = read('git config user.email')
+
+run(`git -c user.name="${name}" -c user.email="${email}" commit -q -m "Сайт из ${commit}"`, dist)
 run(`git push -f -q ${remote} gh-pages`, dist)
 
 console.log(`\nОпубликовано: ветка gh-pages, сборка из ${commit}. Сайт обновится через минуту.`)
