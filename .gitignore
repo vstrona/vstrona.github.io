@@ -1,0 +1,10 @@
+# В репозиторий и на хостинг попадают только файлы сайта
+/*
+!/.gitignore
+!/.nojekyll
+!/index.html
+!/style.css
+!/script.js
+!/viewer.js
+!/works.js
+!/assets/
