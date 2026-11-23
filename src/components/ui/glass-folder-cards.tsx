@@ -984,6 +984,18 @@ const GF_CSS = `
   transform: translate(calc(var(--gf-px) * -7px), calc(var(--gf-py) * -6px)) scale(1.02);
   transition: transform 1.1s var(--gf-ease), opacity 1.2s var(--gf-ease), filter 1.2s var(--gf-ease);
 }
+/* the project's cover sits in the folder like a print: whole, in its own proportions, inside the outline */
+img.gf-art {
+  left: 14px;
+  top: 42px;
+  width: 312px;
+  height: 216px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .06), 0 10px 24px -12px rgba(10, 12, 20, .3);
+  transform: translate(calc(var(--gf-px) * -3px), calc(var(--gf-py) * -3px));
+}
 canvas.gf-art { opacity: 0; filter: blur(14px) saturate(.6); }
 canvas.gf-art[data-ready] { opacity: 1; filter: none; }
 .gf-back-sheen {
@@ -1146,8 +1158,9 @@ canvas.gf-sheet-art[data-ready] { opacity: 1; filter: none; }
   width: 340px;
   height: 198px;
   z-index: 10;
-  -webkit-backdrop-filter: blur(22px) saturate(1.5);
-  backdrop-filter: blur(22px) saturate(1.5);
+  /* light frost: the cover and files stay readable through the glass */
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+  backdrop-filter: blur(10px) saturate(1.4);
   transform-origin: 50% 100%;
   transform: perspective(760px) rotateX(var(--gf-hinge));
   transition: transform .8s var(--gf-spring), translate 1s var(--gf-ease), opacity 1s var(--gf-ease);

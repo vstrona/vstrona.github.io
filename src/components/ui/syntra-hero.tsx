@@ -313,6 +313,20 @@ const BLOCK_CSS = `
     top: calc((100svh - var(--n3-core)) / 2 + 1.75rem);
   }
 
+  /* Animated layers are composited, so fading or tilting them never repaints the SVG inside. */
+  .n3-core-track .n3-layer {
+    will-change: opacity, transform;
+  }
+
+  /* The pulsing glow under the core and the beads' drop shadows re-blur on every frame. */
+  .n3-core-track .n3-seam-pulse {
+    animation: none;
+  }
+
+  .n3-core-track [filter='url(#n3-crystal-shadow)'] {
+    filter: none;
+  }
+
   /* Blurring the page behind each card on every frame of the opening is what made phones stutter. */
   .n3-core-track .n3-stage-card {
     -webkit-backdrop-filter: none;
@@ -980,8 +994,8 @@ const EXPLODE = {
   // Spring that drives the whole reveal. Lower stiffness = slower, softer; higher damping = less settle.
   spring: { stiffness: 105, damping: 25, mass: 1 },
 
-  // On a phone the scroll opens it, so it snaps open quicker: about half a second.
-  phoneSpring: { stiffness: 190, damping: 27, mass: 1 },
+  // On a phone the scroll opens it, so it opens a little quicker than on a computer: about 0.7 s.
+  phoneSpring: { stiffness: 130, damping: 23, mass: 1 },
 
   // Distance between neighbouring plates once apart, in artboard units. Larger = a taller stack.
   gap: 94,
@@ -1039,7 +1053,7 @@ const cardLayout = (phone: boolean) => (phone ? STAGE_CARDS_PHONE : STAGE_CARDS)
  * come together; on a phone, where scrolling opens the stack, they arrive one by one from the bottom.
  */
 const revealRange = (index: number, phone: boolean): [number, number] =>
-  phone ? [0.2 + index * 0.1, 0.4 + index * 0.1] : [0.35, 0.9]
+  phone ? [0.15 + index * 0.11, 0.5 + index * 0.11] : [0.35, 0.9]
 
 // ───── components/motionuikit/sections/syntra/explode-layout.ts ─────
 /**
@@ -1663,7 +1677,7 @@ const StageCard = ({ index, progress, open, lit, phone, onHover }: StageCardProp
         onPointerEnter={handlePointerEnter}
         onPointerLeave={handlePointerLeave}
         className={cn(
-          'n3-stage-card',
+          'n3-stage-card n3-layer',
           phone ? 'px-[0.8em] py-[0.65em]' : 'px-[0.9em] py-[0.85em]',
           phone && isMain(stage) && 'n3-stage-card-main',
           open && 'pointer-events-auto',
@@ -1921,7 +1935,7 @@ type TiltedProps = {
 const Tilted = ({ rotateX, rotateY, children }: TiltedProps) => {
   return (
     <div className='pointer-events-none absolute inset-0 [perspective:1400px]'>
-      <m.div style={{ rotateX, rotateY }} className='absolute inset-0'>
+      <m.div style={{ rotateX, rotateY }} className='n3-layer absolute inset-0'>
         <div className='n3-float absolute inset-0'>{children}</div>
       </m.div>
     </div>
@@ -2101,7 +2115,7 @@ const CoreVisual = () => {
              * mask would cut it off there.
              */}
             <ParallaxLayer x={x} y={y} reach={MOTION.ringParallax}>
-              <m.div style={{ opacity: orbitOpacity }} className='absolute inset-0'>
+              <m.div style={{ opacity: orbitOpacity }} className='n3-layer absolute inset-0'>
                 <SyntraOrbitalSystem className='absolute inset-0 size-full overflow-visible' />
                 <SyntraParticles
                   half='back'
@@ -2112,26 +2126,26 @@ const CoreVisual = () => {
               </m.div>
             </ParallaxLayer>
 
-            <m.div style={{ opacity: shadowOpacity }} className='absolute inset-0'>
+            <m.div style={{ opacity: shadowOpacity }} className='n3-layer absolute inset-0'>
               <SyntraCoreShadow className='pointer-events-none absolute inset-0 size-full overflow-visible' />
             </m.div>
 
             <Tilted rotateX={rotateX} rotateY={rotateY}>
-              <m.div style={{ opacity: restOpacity }} className='absolute inset-0'>
+              <m.div style={{ opacity: restOpacity }} className='n3-layer absolute inset-0'>
                 <SyntraCoreObject className='absolute inset-0 size-full overflow-visible' />
               </m.div>
-              <m.div style={{ opacity: explodedOpacity }} className='absolute inset-0'>
+              <m.div style={{ opacity: explodedOpacity }} className='n3-layer absolute inset-0'>
                 <SyntraExplodedCore
                   progress={progress}
                   phone={phone}
                   className={cn('absolute inset-0 size-full overflow-visible', phone && 'n3-lite')}
                 />
               </m.div>
-              <StageConnectors key={phone ? 'phone' : 'wide'} progress={progress} active={shown && !reduce} hovered={hovered} phone={phone} />
+              <StageConnectors key={phone ? 'phone' : 'wide'} progress={progress} active={shown && !reduce && !phone} hovered={hovered} phone={phone} />
             </Tilted>
 
             <ParallaxLayer x={x} y={y} reach={MOTION.ringParallax}>
-              <m.div style={{ opacity: orbitOpacity }} className='absolute inset-0'>
+              <m.div style={{ opacity: orbitOpacity }} className='n3-layer absolute inset-0'>
                 <SyntraParticles
                   half='front'
                   animate={!reduce}
